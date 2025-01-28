@@ -5,13 +5,16 @@ from openai import OpenAI
 import os
 
 class TwitterFetcher:
-    def __init__(self, api_key: str):
-        self.api_key = api_key
+    def __init__(self):
+        self.api_key = os.getenv('SOCIALDATA_API_KEY')
+        if not self.api_key:
+            raise ValueError("Please set the SOCIALDATA_API_KEY environment variable")
         self.base_url = "https://api.socialdata.tools"
         self.headers = {
-            "Authorization": f"Bearer {api_key}",
+            "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json"
         }
+        print(f"Using SocialData API Key: {self.api_key}")
 
     def get_user_id(self, username: str) -> str:
         username = username.replace('@', '').strip()
@@ -84,9 +87,11 @@ def analyze_tweets_with_gpt4(df: pd.DataFrame) -> str:
     """
     Analyze tweet patterns using GPT-4 for each user in the DataFrame
     """
-    client = OpenAI(
-        api_key='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'  # Replace with your actual OpenAI API key
-    )
+    openai_api_key = os.getenv('OPENAI_API_KEY')
+    if not openai_api_key:
+        raise ValueError("Please set the OPENAI_API_KEY environment variable")
+    
+    client = OpenAI(api_key=openai_api_key)
     
     # Group tweets by username
     analyses = []
@@ -144,7 +149,7 @@ def analyze_tweets_with_gpt4(df: pd.DataFrame) -> str:
     return "\n".join(analyses)
 
 def main():
-    fetcher = TwitterFetcher("2013|ts7ojeD23o1QTVXgi0UbVSEq01y2VNEmYXg5wW6v23cfde4f")
+    fetcher = TwitterFetcher()
     handles = get_user_handles()
     
     tweets_by_user = {}
